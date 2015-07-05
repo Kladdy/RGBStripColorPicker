@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{FDA53105-4C58-42EE-AB78-C1576915DDD4}</ProjectGuid>
+    <ProjectGuid>{10040F95-2D73-4117-9418-C27CDF9701A9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SFMLtest</RootNamespace>
     <ProjectName>RGB Strip Color Picker</ProjectName>
