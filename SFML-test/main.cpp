@@ -12,6 +12,7 @@ using namespace std;
 sf::Vertex vertex(sf::Vector2f(100, 0), sf::Color::Black, sf::Vector2f(100, 100));
 
 sf::VertexArray line(sf::Lines, 10);
+sf::VertexArray lineBox(sf::Lines, 8);
 sf::VertexArray menuFade(sf::Quads, 20);
 
 void menuOverview();
@@ -20,39 +21,61 @@ void menuInstructions();
 void menuOptions();
 void menuCredits();
 void getValue();
-void setValue(int com, int baud);
+void setValue(int com, int baud, int dark);
 template <typename T>
 T StringToNumber(const string &Text, T defValue);
 
 int portCOM;
 int baudRate;
+bool darkMode;
+
+int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200 };
+
 int currentMenu = 0; //0: Overview, 1: Lightning, 2: Instructions, 3: Options: 4: Credits
 
 sf::Sprite logo256Sprite;
+sf::Sprite arrowLeftSprite;
+sf::Sprite arrowRightSprite;
 
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(800, 500), "RGB Strip Color Picker");
 	window.setFramerateLimit(60);
-	
+
 	sf::Image icon;
-	if (!icon.loadFromFile("logo256.png"))
-	{
+	if (!icon.loadFromFile("Assets/logo256.png")){
 		cout << "Error loading 'logo256.png' for icon.";
 	}
 	window.setIcon(256, 256, icon.getPixelsPtr());
 
 	sf::Texture logo256;
-	if (!logo256.loadFromFile("logo256.png"))
-	{
+	if (!logo256.loadFromFile("Assets/logo256.png")){
 		cout << "Error loading 'logo256.png'.";
 	}
-	
+
 	logo256Sprite.setTexture(logo256);
 	logo256Sprite.setPosition(sf::Vector2f(662, 10));
 
+	sf::Texture arrowLeft;
+	if (!arrowLeft.loadFromFile("Assets/arrowLeft.png")){
+		cout << "Error loading 'logo256.png'.";
+	}
+
+	arrowLeftSprite.setTexture(arrowLeft);
+	arrowLeftSprite.setPosition(sf::Vector2f(305, 177));
+
+	sf::Texture arrowRight;
+	if (!arrowRight.loadFromFile("Assets/arrowRight.png")){
+		cout << "Error loading 'logo256.png'.";
+	}
+
+	arrowRightSprite.setTexture(arrowRight);
+	arrowRightSprite.setPosition(sf::Vector2f(393, 177));
+
+
+
 	sf::Font font;
-	if (!font.loadFromFile("Roboto-Light.ttf")){
+	if (!font.loadFromFile("Assets/Roboto-Light.ttf")){
 		cout << "Error loading font 'Roboto-Light'." << endl;
 	}
 
@@ -74,7 +97,25 @@ int main()
 	textMenu[2].setString("Instructions");
 	textMenu[3].setString("Options");
 	textMenu[4].setString("Credits");
-	
+
+	sf::Text textOptions[5];
+
+	for (int i = 0; i < 5; i++){
+		textOptions[i].setFont(font);
+		textOptions[i].setColor(sf::Color::Black);
+		textOptions[i].setCharacterSize(20);
+	}
+
+	textOptions[0].setPosition(210, 10);
+	textOptions[1].setPosition(210, 130);
+	textOptions[2].setPosition(210, 180);
+	textOptions[3].setPosition(210, 230);
+	textOptions[4].setPosition(210, 280);
+
+	textOptions[0].setString("This is where you can change your settings for the program. \nBefore playing around with the different options, it's important to \nread the instructions to set it up correctly.");
+	textOptions[3].setString("Dark mode: x");
+	textOptions[4].setString("");
+
 	sf::Text textOverview;
 
 	textOverview.setFont(font);
@@ -82,6 +123,19 @@ int main()
 	textOverview.setPosition(210, 10);
 	textOverview.setCharacterSize(20);
 	textOverview.setString("Thank you for using RGB Strip Color Picker! \nThis is a tool which you can use to modify your \nRGB color strip attached to an Arduino. Before you \nstart, make sure to read the instructions and check \nout the GitHub page for more information on how \nyou should use this tool. \n\nMore functions and modes will be added by request, so head over \nto the 'Credits' tab and see how you can give feedback and \ncontribute to the project.");
+
+	lineBox[0].position = sf::Vector2f(313, 236);
+	lineBox[1].position = sf::Vector2f(328, 236);
+	lineBox[2].position = sf::Vector2f(328, 236);
+	lineBox[3].position = sf::Vector2f(328, 251);
+	lineBox[4].position = sf::Vector2f(328, 251);
+	lineBox[5].position = sf::Vector2f(313, 251);
+	lineBox[6].position = sf::Vector2f(313, 236);
+	lineBox[7].position = sf::Vector2f(313, 251);
+
+	for (int i = 0; i < 8; i++){
+		lineBox[i].color = sf::Color::Black;
+	}
 
 	line[0].position = sf::Vector2f(200, 10);
 	line[1].position = sf::Vector2f(200, 490);
@@ -131,11 +185,9 @@ int main()
 
 	menuOverview();
 
-	setValue(3, 9600);
-
 	getValue();
 
-	cout << "COM: " + to_string(portCOM) + " Baud: " + to_string(baudRate) << endl;
+	cout << "COM: " + to_string(portCOM) + " Baud: " + to_string(rates[baudRate]) + " Dark: " + to_string(darkMode) << endl;
 
 	while (window.isOpen())
 	{
@@ -169,6 +221,30 @@ int main()
 					currentMenu = 4;
 					menuCredits();
 				}
+				else if (mousePos.x >= 313 && mousePos.x <= 328 && mousePos.y >= 236 && mousePos.y <= 251 && currentMenu == 3){
+					if (darkMode){
+						darkMode = false;
+						setValue(portCOM, baudRate, 0);
+					}
+					else{
+						darkMode = true;
+						setValue(portCOM, baudRate, 1);
+					}
+				}
+				else if (mousePos.x >= 314 && mousePos.x <= 326 && mousePos.y >= 183 && mousePos.y <= 201 && currentMenu == 3){
+					baudRate--;
+					if (baudRate == -1){
+						baudRate = 11;
+					}
+					setValue(portCOM, baudRate, darkMode);
+				}
+				else if (mousePos.x >= 402 && mousePos.x <= 414 && mousePos.y >= 183 && mousePos.y <= 201 && currentMenu == 3){
+					baudRate++;
+					if (baudRate == 12){
+						baudRate = 0;
+					}
+					setValue(portCOM, baudRate, darkMode);
+				}
 			}
 		}
 		
@@ -195,7 +271,20 @@ int main()
 		}
 		else if (currentMenu == 3){
 		//Options
-
+			textOptions[1].setString("COM-port: " + to_string(portCOM));
+			textOptions[2].setString("Baud rate:      " + to_string(rates[baudRate]));
+			window.draw(lineBox);
+			window.draw(arrowLeftSprite);
+			window.draw(arrowRightSprite);
+			for (int i = 0; i < 5; i++){
+				window.draw(textOptions[i]);
+			}
+			if (darkMode){
+				textOptions[3].setString("Dark mode: x");
+			}
+			else{
+				textOptions[3].setString("Dark mode: ");
+			}
 		}
 		else if (currentMenu == 4){
 		//Credits
@@ -269,16 +358,17 @@ void getValue(){
 	
 	string com;
 	string baud;
-	int resultCom;
-	int resultBaud;
-	ifstream settings("options.txt");
+	string dark;
+	ifstream settings("Assets/options.txt");
 	if (settings.is_open()){
 		getline(settings, com);
 		getline(settings, baud);
+		getline(settings, dark);
 		settings.close();
 
 		portCOM = StringToNumber(com, 0.0);
 		baudRate = StringToNumber(baud, 0.0);
+		darkMode = StringToNumber(dark, 0.0);
 
 	}
 	else{
@@ -286,13 +376,15 @@ void getValue(){
 	}
 }
 
-void setValue(int com, int baud){
+void setValue(int com, int baud, int dark){
 
-	ofstream options("options.txt");
+	ofstream options("Assets/options.txt");
 	if (options.is_open()){
 		options << com << endl;
 		options << baud << endl;
+		options << dark << endl;
 		options.close();
+		cout << "Successfully saved " + to_string(com) + " to COM, " + to_string(baud) + " to Baud, " + to_string(dark) + " to Dark" << endl;
 	}
 	else{
 		cout << "Unable to open file 'options.txt'." << endl;
