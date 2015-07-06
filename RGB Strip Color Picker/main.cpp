@@ -4,16 +4,23 @@
 #include <SFML/Graphics.hpp>
 #include <sstream> 
 #include <string>
-
+#include <stdio.h>
+#include <conio.h>
+#include "tserial.h"
+#include "bot_control.h"
 
 
 using namespace std;
+
+serial comm;
 
 sf::Vertex vertex(sf::Vector2f(100, 0), sf::Color::Black, sf::Vector2f(100, 100));
 
 sf::VertexArray line(sf::Lines, 10);
 sf::VertexArray lineBox(sf::Lines, 8);
 sf::VertexArray menuFade(sf::Quads, 20);
+
+int numChars;
 
 void menuOverview();
 void menuLightning();
@@ -24,18 +31,16 @@ void getValue();
 void setValue(int com, int baud, int dark);
 template <typename T>
 T StringToNumber(const string &Text, T defValue);
+void sendData(int charData[]);
 
 int portCOM;
 int baudRate;
 bool darkMode;
-
 int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200 };
 
 int currentMenu = 0; //0: Overview, 1: Lightning, 2: Instructions, 3: Options: 4: Credits
 
 sf::Sprite logo256Sprite;
-sf::Sprite arrowLeftSprite;
-sf::Sprite arrowRightSprite;
 
 int main()
 {
@@ -56,6 +61,11 @@ int main()
 	logo256Sprite.setTexture(logo256);
 	logo256Sprite.setPosition(sf::Vector2f(662, 10));
 
+	sf::Sprite arrowLeftSprite;
+	sf::Sprite arrowRightSprite;
+	sf::Sprite arrowLeftSprite2;
+	sf::Sprite arrowRightSprite2;
+
 	sf::Texture arrowLeft;
 	if (!arrowLeft.loadFromFile("Assets/arrowLeft.png")){
 		cout << "Error loading 'logo256.png'.";
@@ -63,6 +73,8 @@ int main()
 
 	arrowLeftSprite.setTexture(arrowLeft);
 	arrowLeftSprite.setPosition(sf::Vector2f(305, 177));
+	arrowLeftSprite2.setTexture(arrowLeft);
+	arrowLeftSprite2.setPosition(sf::Vector2f(305, 127));
 
 	sf::Texture arrowRight;
 	if (!arrowRight.loadFromFile("Assets/arrowRight.png")){
@@ -71,6 +83,8 @@ int main()
 
 	arrowRightSprite.setTexture(arrowRight);
 	arrowRightSprite.setPosition(sf::Vector2f(393, 177));
+	arrowRightSprite2.setTexture(arrowRight);
+	arrowRightSprite2.setPosition(sf::Vector2f(347, 127));
 
 
 
@@ -187,7 +201,7 @@ int main()
 
 	getValue();
 
-	cout << "COM: " + to_string(portCOM) + " Baud: " + to_string(rates[baudRate]) + " Dark: " + to_string(darkMode) << endl;
+	cout << "COM: " + to_string(portCOM) + " Baud: " + to_string(baudRate) + " Dark: " + to_string(darkMode) << endl;
 
 	while (window.isOpen())
 	{
@@ -199,8 +213,8 @@ int main()
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Left)){
-				
+			if (event.type == sf::Event::MouseButtonPressed){
+
 				if (mousePos.x >= 10 && mousePos.x <= 200 && mousePos.y >= 10 && mousePos.y <= 100){
 					currentMenu = 0;
 					menuOverview();
@@ -245,6 +259,20 @@ int main()
 					}
 					setValue(portCOM, baudRate, darkMode);
 				}
+				else if (mousePos.x >= 314 && mousePos.x <= 326 && mousePos.y >= 133 && mousePos.y <= 151 && currentMenu == 3){
+					portCOM--;
+					if (portCOM == 0){
+						portCOM = 10;
+					}
+					setValue(portCOM, baudRate, darkMode);
+				}
+				else if (mousePos.x >= 356 && mousePos.x <= 368 && mousePos.y >= 133 && mousePos.y <= 151 && currentMenu == 3){
+					portCOM++;
+					if (portCOM == 11){
+						portCOM = 1;
+					}
+					setValue(portCOM, baudRate, darkMode);
+				}
 			}
 		}
 		
@@ -271,11 +299,13 @@ int main()
 		}
 		else if (currentMenu == 3){
 		//Options
-			textOptions[1].setString("COM-port: " + to_string(portCOM));
+			textOptions[1].setString("COM-port:      " + to_string(portCOM));
 			textOptions[2].setString("Baud rate:      " + to_string(rates[baudRate]));
 			window.draw(lineBox);
 			window.draw(arrowLeftSprite);
 			window.draw(arrowRightSprite);
+			window.draw(arrowLeftSprite2);
+			window.draw(arrowRightSprite2);
 			for (int i = 0; i < 5; i++){
 				window.draw(textOptions[i]);
 			}
@@ -400,4 +430,17 @@ T StringToNumber(const string &Text, T defValue = T())
 			ss << *i;
 	T result;
 	return ss >> result ? result : defValue;
+}
+
+void sendData(int charData[]){
+	
+	char port = (char)portCOM;
+	char* com = &port;
+
+	comm.startDevice(com, baudRate);
+	for (int i = 0; i < numChars; i++){
+		comm.send_data(charData[i]);
+	}
+	comm.stopDevice(); 
+	_getch();
 }
