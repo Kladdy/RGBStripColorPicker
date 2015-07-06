@@ -19,6 +19,7 @@ sf::Vertex vertex(sf::Vector2f(100, 0), sf::Color::Black, sf::Vector2f(100, 100)
 sf::VertexArray line(sf::Lines, 10);
 sf::VertexArray lineBox(sf::Lines, 8);
 sf::VertexArray menuFade(sf::Quads, 20);
+sf::VertexArray hueBar(sf::Quads, 24);
 
 int numChars;
 
@@ -33,12 +34,18 @@ template <typename T>
 T StringToNumber(const string &Text, T defValue);
 void sendData(int charData[]);
 
+
 int portCOM;
 int baudRate;
 bool darkMode;
 int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200 };
 
+int valRed;
+int valGreen;
+int valBlue;
+
 int currentMenu = 0; //0: Overview, 1: Lightning, 2: Instructions, 3: Options: 4: Credits
+int lightningMenu = 0; //0: Static, 2: Rainbow, 3: Cycle, 4: Fade RGB, 5: Fade Random
 
 sf::Sprite logo256Sprite;
 
@@ -60,6 +67,24 @@ int main()
 
 	logo256Sprite.setTexture(logo256);
 	logo256Sprite.setPosition(sf::Vector2f(662, 10));
+
+	sf::Texture CWB;
+	if (!CWB.loadFromFile("Assets/CWB.png")){
+		cout << "Error loading 'CWB.png'.";
+	}
+
+	sf::Sprite CWBSprite;
+	CWBSprite.setTexture(CWB);
+	CWBSprite.setPosition(sf::Vector2f(210, 133));
+
+	sf::Texture barHolder;
+	if (!barHolder.loadFromFile("Assets/barHolder.png")){
+		cout << "Error loading 'barHolder.png'.";
+	}
+
+	sf::Sprite barHolderSprite;
+	barHolderSprite.setTexture(barHolder);
+	barHolderSprite.setPosition(sf::Vector2f(274, 130));
 
 	sf::Sprite arrowLeftSprite;
 	sf::Sprite arrowRightSprite;
@@ -112,6 +137,42 @@ int main()
 	textMenu[3].setString("Options");
 	textMenu[4].setString("Credits");
 
+	sf::Text textOverview;
+
+	textOverview.setFont(font);
+	textOverview.setColor(sf::Color::Black);
+	textOverview.setPosition(210, 10);
+	textOverview.setCharacterSize(20);
+	textOverview.setString("Thank you for using RGB Strip Color Picker! \nThis is a tool which you can use to modify your \nRGB color strip attached to an Arduino. Before you \nstart, make sure to read the instructions and check \nout the GitHub page for more information on how \nyou should use this tool. \n\nMore functions and modes will be added by request, so head over \nto the 'Credits' tab and see how you can give feedback and \ncontribute to the project.");
+
+	sf::Text textLightning[8];
+
+	for (int i = 0; i < 8; i++){
+		textLightning[i].setFont(font);
+		textLightning[i].setColor(sf::Color::Black);
+		textLightning[i].setCharacterSize(20);
+	}
+
+	textLightning[0].setColor(sf::Color(0, 170, 255));
+
+	textLightning[0].setPosition(301, 10);
+	textLightning[1].setPosition(412, 10);
+	textLightning[2].setPosition(552, 10);
+	textLightning[3].setPosition(680, 10);
+	textLightning[4].setPosition(650, 35);
+	textLightning[5].setPosition(710, 35);
+	textLightning[6].setPosition(650, 470);
+	textLightning[7].setPosition(741, 470);
+
+	textLightning[0].setString("Static");
+	textLightning[1].setString("Rainbow");
+	textLightning[2].setString("Cycle");
+	textLightning[3].setString("Fade");
+	textLightning[4].setString("RGB");
+	textLightning[5].setString("Random");
+	textLightning[6].setString("Preview");
+	textLightning[7].setString("Apply");
+
 	sf::Text textOptions[5];
 
 	for (int i = 0; i < 5; i++){
@@ -126,17 +187,9 @@ int main()
 	textOptions[3].setPosition(210, 230);
 	textOptions[4].setPosition(210, 280);
 
-	textOptions[0].setString("This is where you can change your settings for the program. \nBefore playing around with the different options, it's important to \nread the instructions to set it up correctly.");
+	textOptions[0].setString("This is where you can change your options for the program. \nBefore playing around with the different settings, it's important to \nread the instructions to set it up correctly.");
 	textOptions[3].setString("Dark mode: x");
 	textOptions[4].setString("");
-
-	sf::Text textOverview;
-
-	textOverview.setFont(font);
-	textOverview.setColor(sf::Color::Black);
-	textOverview.setPosition(210, 10);
-	textOverview.setCharacterSize(20);
-	textOverview.setString("Thank you for using RGB Strip Color Picker! \nThis is a tool which you can use to modify your \nRGB color strip attached to an Arduino. Before you \nstart, make sure to read the instructions and check \nout the GitHub page for more information on how \nyou should use this tool. \n\nMore functions and modes will be added by request, so head over \nto the 'Credits' tab and see how you can give feedback and \ncontribute to the project.");
 
 	lineBox[0].position = sf::Vector2f(313, 236);
 	lineBox[1].position = sf::Vector2f(328, 236);
@@ -194,6 +247,66 @@ int main()
 	menuFade[17].position = sf::Vector2f(200, 400);
 	menuFade[18].position = sf::Vector2f(200, 490);
 	menuFade[19].position = sf::Vector2f(10, 490);
+
+	hueBar[0].position = sf::Vector2f(277, 133);
+	hueBar[1].position = sf::Vector2f(377, 133);
+	hueBar[2].position = sf::Vector2f(377, 183);
+	hueBar[3].position = sf::Vector2f(277, 183);
+
+	hueBar[4].position = sf::Vector2f(277, 183);
+	hueBar[5].position = sf::Vector2f(377, 183);
+	hueBar[6].position = sf::Vector2f(377, 233);
+	hueBar[7].position = sf::Vector2f(277, 233);
+
+	hueBar[8].position = sf::Vector2f(277, 233);
+	hueBar[9].position = sf::Vector2f(377, 233);
+	hueBar[10].position = sf::Vector2f(377, 283);
+	hueBar[11].position = sf::Vector2f(277, 283);
+
+	hueBar[12].position = sf::Vector2f(277, 283);
+	hueBar[13].position = sf::Vector2f(377, 283);
+	hueBar[14].position = sf::Vector2f(377, 333);
+	hueBar[15].position = sf::Vector2f(277, 333);
+
+	hueBar[16].position = sf::Vector2f(277, 333);
+	hueBar[17].position = sf::Vector2f(377, 333);
+	hueBar[18].position = sf::Vector2f(377, 383);
+	hueBar[19].position = sf::Vector2f(277, 383);
+
+	hueBar[20].position = sf::Vector2f(277, 383);
+	hueBar[21].position = sf::Vector2f(377, 383);
+	hueBar[22].position = sf::Vector2f(377, 433);
+	hueBar[23].position = sf::Vector2f(277, 433);
+
+	hueBar[0].color = sf::Color::Red;
+	hueBar[1].color = sf::Color::Red;
+	hueBar[2].color = sf::Color::Yellow;
+	hueBar[3].color = sf::Color::Yellow;
+
+	hueBar[4].color = sf::Color::Yellow;
+	hueBar[5].color = sf::Color::Yellow;
+	hueBar[6].color = sf::Color::Green;
+	hueBar[7].color = sf::Color::Green;
+
+	hueBar[8].color = sf::Color::Green;
+	hueBar[9].color = sf::Color::Green;
+	hueBar[10].color = sf::Color::Cyan;
+	hueBar[11].color = sf::Color::Cyan;
+
+	hueBar[12].color = sf::Color::Cyan;
+	hueBar[13].color = sf::Color::Cyan;
+	hueBar[14].color = sf::Color::Blue;
+	hueBar[15].color = sf::Color::Blue;
+
+	hueBar[16].color = sf::Color::Blue;
+	hueBar[17].color = sf::Color::Blue;
+	hueBar[18].color = sf::Color::Magenta;
+	hueBar[19].color = sf::Color::Magenta;
+
+	hueBar[20].color = sf::Color::Magenta;
+	hueBar[21].color = sf::Color::Magenta;
+	hueBar[22].color = sf::Color::Red;
+	hueBar[23].color = sf::Color::Red;
 
 	sf::Vector2i mousePos;
 
@@ -273,6 +386,93 @@ int main()
 					}
 					setValue(portCOM, baudRate, darkMode);
 				}
+				else if (mousePos.x >= 301 && mousePos.x <= 349 && mousePos.y >= 10 && mousePos.y <= 25 && currentMenu == 1){
+					textLightning[1].setColor(sf::Color::Black);
+					textLightning[2].setColor(sf::Color::Black);
+					textLightning[3].setColor(sf::Color::Black);
+					textLightning[0].setColor(sf::Color(0, 170, 255));
+
+					lightningMenu = 0;
+				}
+				else if (mousePos.x >= 412 && mousePos.x <= 487 && mousePos.y >= 10 && mousePos.y <= 25 && currentMenu == 1){
+					textLightning[0].setColor(sf::Color::Black);
+					textLightning[2].setColor(sf::Color::Black);
+					textLightning[3].setColor(sf::Color::Black);
+					textLightning[1].setColor(sf::Color(0, 170, 255));
+
+					lightningMenu = 1;
+				}
+				else if (mousePos.x >= 552 && mousePos.x <= 597 && mousePos.y >= 10 && mousePos.y <= 25 && currentMenu == 1){
+					textLightning[0].setColor(sf::Color::Black);
+					textLightning[1].setColor(sf::Color::Black);
+					textLightning[3].setColor(sf::Color::Black);
+					textLightning[2].setColor(sf::Color(0, 170, 255));
+
+					lightningMenu = 2;
+				}
+				else if ((mousePos.x >= 680 && mousePos.x <= 720 && mousePos.y >= 10 && mousePos.y <= 25 && currentMenu == 1) || (mousePos.x >= 650 && mousePos.x <= 687 && mousePos.y >= 35 && mousePos.y <= 50 && currentMenu == 1 && (lightningMenu == 3 || lightningMenu == 5))){
+					textLightning[0].setColor(sf::Color::Black);
+					textLightning[1].setColor(sf::Color::Black);
+					textLightning[2].setColor(sf::Color::Black);
+					textLightning[5].setColor(sf::Color::Black);
+					textLightning[3].setColor(sf::Color(0, 170, 255));
+					textLightning[4].setColor(sf::Color(0, 170, 255));
+
+					lightningMenu = 4;
+				}
+				else if (mousePos.x >= 710 && mousePos.x <= 783 && mousePos.y >= 35 && mousePos.y <= 50 && currentMenu == 1 && (lightningMenu == 3 || lightningMenu == 4)){
+					textLightning[0].setColor(sf::Color::Black);
+					textLightning[1].setColor(sf::Color::Black);
+					textLightning[2].setColor(sf::Color::Black);
+					textLightning[4].setColor(sf::Color::Black);
+					textLightning[5].setColor(sf::Color(0, 170, 255));
+
+
+					lightningMenu = 5;
+				}
+			}
+		}
+
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && currentMenu == 1 && lightningMenu == 0 && mousePos.x >= 277 && mousePos.x <= 377 && mousePos.y >= 133 && mousePos.y <= 433){
+		
+			if (mousePos.y >= 133 && mousePos.y <= 233){
+				valRed = 255 - ((mousePos.y - 133) * 2.55);
+			}
+			else if (mousePos.y >= 333 && mousePos.y <= 433){
+				valRed = ((mousePos.y - 333) * 2.55);
+			}
+			else{
+				valRed = 0;
+			}
+			if (mousePos.y >= 133 && mousePos.y <= 233){
+				valGreen = ((mousePos.y - 133) * 2.55);
+			}
+			else if (mousePos.y >= 233 && mousePos.y <= 333){
+				valGreen = 255 - ((mousePos.y - 233) * 2.55);
+			}
+			else{
+				valGreen = 0;
+			}
+			if (mousePos.y >= 233 && mousePos.y <= 333){
+				valBlue = ((mousePos.y - 233) * 2.55);
+			}
+			else if (mousePos.y >= 333 && mousePos.y <= 433){
+				valBlue = 255 - ((mousePos.y - 333) * 2.55);
+			}
+			else{
+				valBlue = 0;
+			}
+		}
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && currentMenu == 1 && lightningMenu == 0 && mousePos.x >= 277 && mousePos.x <= 377){
+		
+			if (mousePos.y <= 134){
+				barHolderSprite.setPosition(274, 130);
+			}
+			else if (mousePos.y >= 430){
+				barHolderSprite.setPosition(274, 427);
+			}
+			else{
+				barHolderSprite.setPosition(274, mousePos.y - 4);
 			}
 		}
 		
@@ -291,7 +491,37 @@ int main()
 
 		}else if (currentMenu == 1){
 		//Lightning
+			if (lightningMenu == 0){
+				window.draw(CWBSprite);
+				window.draw(hueBar);
+				window.draw(barHolderSprite);
+			}
+			else if (lightningMenu == 1){
+				
+			}
+			else if (lightningMenu == 2){
 
+			}
+			else if(lightningMenu == 3){
+				window.draw(textLightning[4]);
+				window.draw(textLightning[5]);
+			}
+			else if (lightningMenu == 4){
+				window.draw(textLightning[4]);
+				window.draw(textLightning[5]);
+			}
+			else if (lightningMenu == 5){
+				window.draw(textLightning[4]);
+				window.draw(textLightning[5]);
+			}
+			
+			for (int i = 0; i < 4; i++){
+				window.draw(textLightning[i]);
+			}
+			for (int i = 6; i < 8; i++){
+				window.draw(textLightning[i]);
+			}
+			
 		}
 		else if (currentMenu == 2){
 		//Instructions
