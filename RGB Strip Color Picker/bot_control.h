@@ -18,9 +18,9 @@ class serial{
 		if (com!=0)
 		{
 			if(com->connect(port, speed, spNONE))
-				printf("Not Connected...\n");
+				printf("Failed to connect to Arduino. Please check that it is plugged in to the computer and no other serial processes are interacting with it. \n");
 			else
-				printf("Connected..\n");
+				printf("Successfully connected to the Arduino\n");
 			return TRUE;
 		}
 		else

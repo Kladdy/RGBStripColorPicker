@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "stdafx.h"
 #include <iostream>
 #include <fstream>
@@ -37,13 +41,16 @@ void getValue();
 void setValue(int com, int baud, int dark);
 template <typename T>
 T StringToNumber(const string &Text, T defValue);
-void sendData(int charData[]);
+void sendData(int lightMode);
 void previewLightning(int previewMode);
+void applyLight(int lightMode);
 
 int portCOM;
 int baudRate;
 bool darkMode;
 int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200 };
+
+char charData1[20];
 
 int valRed = 255;
 int valGreen = 0;
@@ -482,6 +489,11 @@ int main()
 					previewLightning(lightningMenu);
 
 				}
+				else if (mousePos.x >= 741 && mousePos.x <= 788 && mousePos.y >= 470 && mousePos.y <= 485 && currentMenu == 1){
+
+					applyLight(lightningMenu);
+
+				}
 				else if (mousePos.x >= 210 && mousePos.x <= 268 && mousePos.y >= 133 && mousePos.y <= 233 && currentMenu == 1){
 
 					valRed = oldVal[0];
@@ -783,17 +795,48 @@ T StringToNumber(const string &Text, T defValue = T())
 	return ss >> result ? result : defValue;
 }
 
-void sendData(int charData[]){
-	
-	char port = (char)portCOM;
-	char* com = &port;
+void sendData(int lightMode){
 
-	comm.startDevice(com, baudRate);
-	for (int i = 0; i < numChars; i++){
-		comm.send_data(charData[i]);
+	if (portCOM == 1){
+		comm.startDevice("COM1", rates[baudRate]);
 	}
-	comm.stopDevice(); 
-	_getch();
+	else if(portCOM == 2){
+		comm.startDevice("COM2", rates[baudRate]);
+	}
+	else if (portCOM == 3){
+		comm.startDevice("COM3", rates[baudRate]);
+	}
+	else if (portCOM == 4){
+		comm.startDevice("COM4", rates[baudRate]);
+	}
+	else if (portCOM == 5){
+		comm.startDevice("COM5", rates[baudRate]);
+	}
+	else if (portCOM == 6){
+		comm.startDevice("COM6", rates[baudRate]);
+	}
+	else if (portCOM == 7){
+		comm.startDevice("COM7", rates[baudRate]);
+	}
+	else if (portCOM == 8){
+		comm.startDevice("COM8", rates[baudRate]);
+	}
+	else if (portCOM == 9){
+		comm.startDevice("COM9", rates[baudRate]);
+	}
+	else if (portCOM == 10){
+		comm.startDevice("COM10", rates[baudRate]);
+	}
+
+	if (lightMode == 1){
+		for (int i = 0; i < 10; i++){
+			comm.send_data(charData1[i]);
+		}
+		comm.stopDevice();
+		cout << "\nData sent, stopped device" << endl;
+	}
+
+	
 }
 
 void previewLightning(int previewMode){
@@ -848,4 +891,72 @@ void previewLightning(int previewMode){
 		preview.draw(logo512preSprite);
 		preview.display();
 	}
+}
+
+void applyLight(int lightMode){
+
+	if (lightMode == 0){
+
+		string red = to_string(valRed);
+		string green = to_string(valGreen);
+		string blue = to_string(valBlue);
+
+		cout << red + " " + to_string(valRed) << endl;
+		cout << green + " " + to_string(valGreen) << endl;
+		cout << blue + " " + to_string(valBlue) << endl;
+
+		charData1[0] = 'q';
+
+		if (valRed < 10){
+			charData1[1] = '0';
+			charData1[2] = '0';
+			charData1[3] = red[0];
+		}
+		else if (valRed < 100){
+			charData1[1] = '0';
+			charData1[2] = red[0];
+			charData1[3] = red[1];
+		}
+		else{
+			charData1[1] = red[0];
+			charData1[2] = red[1];
+			charData1[3] = red[2];
+		}
+
+		if (valGreen < 10){
+			charData1[4] = '0';
+			charData1[5] = '0';
+			charData1[6] = green[0];
+		}
+		else if (valGreen < 100){
+			charData1[4] = '0';
+			charData1[5] = green[0];
+			charData1[6] = green[1];
+		}
+		else{
+			charData1[4] = green[0];
+			charData1[5] = green[1];
+			charData1[6] = green[2];
+		}
+
+		if (valBlue < 10){
+			charData1[7] = '0';
+			charData1[8] = '0';
+			charData1[9] = blue[0];
+		}
+		else if (valBlue < 100){
+			charData1[7] = '0';
+			charData1[8] = blue[0];
+			charData1[9] = blue[1];
+		}
+		else{
+			charData1[7] = blue[0];
+			charData1[8] = blue[1];
+			charData1[9] = blue[2];
+		}
+
+		sendData(1);
+	}
+	
+
 }
