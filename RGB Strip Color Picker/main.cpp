@@ -20,6 +20,11 @@ sf::VertexArray line(sf::Lines, 10);
 sf::VertexArray lineBox(sf::Lines, 8);
 sf::VertexArray menuFade(sf::Quads, 20);
 sf::VertexArray hueBar(sf::Quads, 24);
+sf::VertexArray lineBox2(sf::Lines, 8);
+sf::VertexArray lineBox3(sf::Lines, 8);
+sf::RectangleShape currentColor(sf::Vector2f(70, 70));
+sf::RectangleShape chooseColor(sf::Vector2f(58, 100));
+sf::RectangleShape chooseBlack(sf::Vector2f(58, 100));
 
 int numChars;
 
@@ -33,19 +38,22 @@ void setValue(int com, int baud, int dark);
 template <typename T>
 T StringToNumber(const string &Text, T defValue);
 void sendData(int charData[]);
-
+void previewLightning(int previewMode);
 
 int portCOM;
 int baudRate;
 bool darkMode;
 int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200 };
 
-int valRed;
-int valGreen;
-int valBlue;
+int valRed = 255;
+int valGreen = 0;
+int valBlue = 0;
+
+int oldVal[3] = { 255, 0 ,0 };
 
 int currentMenu = 0; //0: Overview, 1: Lightning, 2: Instructions, 3: Options: 4: Credits
 int lightningMenu = 0; //0: Static, 2: Rainbow, 3: Cycle, 4: Fade RGB, 5: Fade Random
+int colorMode = 0;
 
 sf::Sprite logo256Sprite;
 
@@ -84,7 +92,7 @@ int main()
 
 	sf::Sprite barHolderSprite;
 	barHolderSprite.setTexture(barHolder);
-	barHolderSprite.setPosition(sf::Vector2f(274, 130));
+	barHolderSprite.setPosition(sf::Vector2f(273, 130));
 
 	sf::Sprite arrowLeftSprite;
 	sf::Sprite arrowRightSprite;
@@ -110,8 +118,6 @@ int main()
 	arrowRightSprite.setPosition(sf::Vector2f(393, 177));
 	arrowRightSprite2.setTexture(arrowRight);
 	arrowRightSprite2.setPosition(sf::Vector2f(347, 127));
-
-
 
 	sf::Font font;
 	if (!font.loadFromFile("Assets/Roboto-Light.ttf")){
@@ -145,9 +151,9 @@ int main()
 	textOverview.setCharacterSize(20);
 	textOverview.setString("Thank you for using RGB Strip Color Picker! \nThis is a tool which you can use to modify your \nRGB color strip attached to an Arduino. Before you \nstart, make sure to read the instructions and check \nout the GitHub page for more information on how \nyou should use this tool. \n\nMore functions and modes will be added by request, so head over \nto the 'Credits' tab and see how you can give feedback and \ncontribute to the project.");
 
-	sf::Text textLightning[8];
+	sf::Text textLightning[11];
 
-	for (int i = 0; i < 8; i++){
+	for (int i = 0; i < 11; i++){
 		textLightning[i].setFont(font);
 		textLightning[i].setColor(sf::Color::Black);
 		textLightning[i].setCharacterSize(20);
@@ -163,6 +169,9 @@ int main()
 	textLightning[5].setPosition(710, 35);
 	textLightning[6].setPosition(650, 470);
 	textLightning[7].setPosition(741, 470);
+	textLightning[8].setPosition(388, 213);
+	textLightning[9].setPosition(387, 238);
+	textLightning[10].setPosition(388, 263);
 
 	textLightning[0].setString("Static");
 	textLightning[1].setString("Rainbow");
@@ -172,6 +181,9 @@ int main()
 	textLightning[5].setString("Random");
 	textLightning[6].setString("Preview");
 	textLightning[7].setString("Apply");
+	textLightning[8].setString("R:  " + to_string(valRed));
+	textLightning[9].setString("G:  " + to_string(valGreen));
+	textLightning[10].setString("B:  " + to_string(valBlue));
 
 	sf::Text textOptions[5];
 
@@ -203,6 +215,33 @@ int main()
 	for (int i = 0; i < 8; i++){
 		lineBox[i].color = sf::Color::Black;
 	}
+
+	lineBox2[0].position = sf::Vector2f(388, 133);
+	lineBox2[1].position = sf::Vector2f(458, 133);
+	lineBox2[2].position = sf::Vector2f(458, 133);
+	lineBox2[3].position = sf::Vector2f(458, 203);
+	lineBox2[4].position = sf::Vector2f(458, 203);
+	lineBox2[5].position = sf::Vector2f(388, 203);
+	lineBox2[6].position = sf::Vector2f(388, 133);
+	lineBox2[7].position = sf::Vector2f(388, 203);
+
+	for (int i = 0; i < 8; i++){
+		lineBox2[i].color = sf::Color::Black;
+	}
+
+	lineBox3[0].position = sf::Vector2f(277, 133);
+	lineBox3[1].position = sf::Vector2f(377, 133);
+	lineBox3[2].position = sf::Vector2f(377, 133);
+	lineBox3[3].position = sf::Vector2f(377, 433);
+	lineBox3[4].position = sf::Vector2f(377, 433);
+	lineBox3[5].position = sf::Vector2f(277, 433);
+	lineBox3[6].position = sf::Vector2f(277, 133);
+	lineBox3[7].position = sf::Vector2f(277, 433);
+
+	for (int i = 0; i < 8; i++){
+		lineBox3[i].color = sf::Color::Black;
+	}
+
 
 	line[0].position = sf::Vector2f(200, 10);
 	line[1].position = sf::Vector2f(200, 490);
@@ -307,6 +346,14 @@ int main()
 	hueBar[21].color = sf::Color::Magenta;
 	hueBar[22].color = sf::Color::Red;
 	hueBar[23].color = sf::Color::Red;
+
+	currentColor.setPosition(sf::Vector2f(388, 133));
+	currentColor.setFillColor(sf::Color(valRed, valGreen, valBlue));
+
+	chooseColor.setPosition(sf::Vector2f(210, 133));
+	chooseColor.setFillColor(sf::Color(valRed, valGreen, valBlue));
+	chooseBlack.setPosition(sf::Vector2f(210, 333));
+	chooseBlack.setFillColor(sf::Color::Black);
 
 	sf::Vector2i mousePos;
 
@@ -430,50 +477,112 @@ int main()
 
 					lightningMenu = 5;
 				}
+				else if (mousePos.x >= 650 && mousePos.x <= 716 && mousePos.y >= 470 && mousePos.y <= 485 && currentMenu == 1){
+					
+					previewLightning(lightningMenu);
+
+				}
+				else if (mousePos.x >= 210 && mousePos.x <= 268 && mousePos.y >= 133 && mousePos.y <= 233 && currentMenu == 1){
+
+					valRed = oldVal[0];
+					valGreen = oldVal[1];
+					valBlue = oldVal[2];
+
+					colorMode = 0;
+				}
+				else if (mousePos.x >= 210 && mousePos.x <= 268 && mousePos.y >= 233 && mousePos.y <= 333 && currentMenu == 1){
+
+					if (colorMode == 0){
+						oldVal[0] = valRed;
+						oldVal[1] = valGreen;
+						oldVal[2] = valBlue;
+					}
+
+					valRed = 255;
+					valGreen = 255;
+					valBlue = 255;
+
+					colorMode = 1;
+				}
+				else if (mousePos.x >= 210 && mousePos.x <= 268 && mousePos.y >= 333 && mousePos.y <= 433 && currentMenu == 1){
+
+					if (colorMode == 0){
+						oldVal[0] = valRed;
+						oldVal[1] = valGreen;
+						oldVal[2] = valBlue;
+					}
+					
+					valRed = 0;
+					valGreen = 0;
+					valBlue = 0;
+					
+					colorMode = 2;
+				}
 			}
 		}
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && currentMenu == 1 && lightningMenu == 0 && mousePos.x >= 277 && mousePos.x <= 377 && mousePos.y >= 133 && mousePos.y <= 433){
 		
-			if (mousePos.y >= 133 && mousePos.y <= 233){
-				valRed = 255 - ((mousePos.y - 133) * 2.55);
+			if (mousePos.y >= 133 && mousePos.y <= 183){
+				valRed = 255;
 			}
-			else if (mousePos.y >= 333 && mousePos.y <= 433){
-				valRed = ((mousePos.y - 333) * 2.55);
+			else if (mousePos.y >= 183 && mousePos.y <= 233){
+				valRed = 255 - ((mousePos.y - 183) * 5.1);
+			}
+			else if (mousePos.y >= 333 && mousePos.y <= 383){
+				valRed = ((mousePos.y - 333) * 5.1);
+			}
+			else if (mousePos.y >= 383 && mousePos.y <= 433){
+				valRed = 255;
 			}
 			else{
 				valRed = 0;
 			}
-			if (mousePos.y >= 133 && mousePos.y <= 233){
-				valGreen = ((mousePos.y - 133) * 2.55);
+
+			if (mousePos.y >= 133 && mousePos.y <= 183){
+				valGreen = ((mousePos.y - 133) * 5.1);
 			}
-			else if (mousePos.y >= 233 && mousePos.y <= 333){
-				valGreen = 255 - ((mousePos.y - 233) * 2.55);
+			else if (mousePos.y >= 183 && mousePos.y <= 283){
+				valGreen = 255;
+			}
+			else if (mousePos.y >= 283 && mousePos.y <= 333){
+				valGreen = 255 - ((mousePos.y - 283) * 5.1);
 			}
 			else{
 				valGreen = 0;
 			}
-			if (mousePos.y >= 233 && mousePos.y <= 333){
-				valBlue = ((mousePos.y - 233) * 2.55);
+
+			if (mousePos.y >= 283 && mousePos.y <= 383){
+				valBlue = 255;
 			}
-			else if (mousePos.y >= 333 && mousePos.y <= 433){
-				valBlue = 255 - ((mousePos.y - 333) * 2.55);
+			else if (mousePos.y >= 233 && mousePos.y <= 283){
+				valBlue = ((mousePos.y - 233) * 5.1);
+			}
+			else if (mousePos.y >= 383 && mousePos.y <= 433){
+				valBlue = 255 - ((mousePos.y - 383) * 5.1);
 			}
 			else{
 				valBlue = 0;
 			}
+			chooseColor.setFillColor(sf::Color(valRed, valGreen, valBlue));
+			oldVal[0] = valRed;
+			oldVal[1] = valGreen;
+			oldVal[2] = valBlue;
 		}
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && currentMenu == 1 && lightningMenu == 0 && mousePos.x >= 277 && mousePos.x <= 377){
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && currentMenu == 1 && lightningMenu == 0 && mousePos.x >= 277 && mousePos.x <= 377 && mousePos.y >= 53 && mousePos.y <= 513){
 		
 			if (mousePos.y <= 134){
-				barHolderSprite.setPosition(274, 130);
+				barHolderSprite.setPosition(273, 130);
+				valRed = 255;
 			}
 			else if (mousePos.y >= 430){
-				barHolderSprite.setPosition(274, 427);
+				barHolderSprite.setPosition(273, 427);
+				valRed = 255;
 			}
 			else{
-				barHolderSprite.setPosition(274, mousePos.y - 4);
+				barHolderSprite.setPosition(273, mousePos.y - 4);
 			}
+			chooseColor.setFillColor(sf::Color(valRed, valGreen, valBlue));
 		}
 		
 
@@ -492,9 +601,21 @@ int main()
 		}else if (currentMenu == 1){
 		//Lightning
 			if (lightningMenu == 0){
+				textLightning[8].setString("R:  " + to_string(valRed));
+				textLightning[9].setString("G:  " + to_string(valGreen));
+				textLightning[10].setString("B:  " + to_string(valBlue));
+				currentColor.setFillColor(sf::Color(valRed, valGreen, valBlue));
+				window.draw(chooseColor);
+				window.draw(chooseBlack);
 				window.draw(CWBSprite);
 				window.draw(hueBar);
+				window.draw(lineBox3);
 				window.draw(barHolderSprite);
+				window.draw(currentColor);
+				window.draw(lineBox2);
+				for (int i = 8; i < 11; i++){
+					window.draw(textLightning[i]);
+				}
 			}
 			else if (lightningMenu == 1){
 				
@@ -673,4 +794,58 @@ void sendData(int charData[]){
 	}
 	comm.stopDevice(); 
 	_getch();
+}
+
+void previewLightning(int previewMode){
+	
+	sf::RenderWindow preview(sf::VideoMode(512, 512), "Preview");
+
+	sf::Image iconPre;
+	if (!iconPre.loadFromFile("Assets/logo256.png")){
+		cout << "Error loading 'logo256.png' for icon in the preview window.";
+	}
+	preview.setIcon(256, 256, iconPre.getPixelsPtr());
+
+	sf::Texture logo512pre;
+	if (!logo512pre.loadFromFile("Assets/logo512pre.png")){
+		cout << "Error loading 'logo512pre.png' for the preview window.";
+	}
+	
+	sf::Sprite logo512preSprite;
+	logo512preSprite.setTexture(logo512pre);
+
+	sf::RectangleShape previewColor(sf::Vector2f(250, 250));
+	previewColor.setPosition(sf::Vector2f(125, 125));
+
+	if (previewMode == 0){
+		previewColor.setFillColor(sf::Color(valRed, valGreen, valBlue));
+		cout << "Previewing static lightning" << endl;
+	}
+	else if (previewMode == 1){
+		cout << "Previewing rainbow lightning" << endl;
+	}
+	else if (previewMode == 2){
+		cout << "Previewing cycle lightning" << endl;
+	}
+	else if (previewMode == 4){
+		cout << "Previewing RGB fade lightning" << endl;
+	}
+	else if (previewMode == 5){
+		cout << "Previewing random fade lightning" << endl;
+	}
+
+	while (preview.isOpen())
+	{
+		sf::Event event;
+		while (preview.pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed)
+				preview.close();
+		}
+
+		preview.clear(sf::Color::White);
+		preview.draw(previewColor);
+		preview.draw(logo512preSprite);
+		preview.display();
+	}
 }
