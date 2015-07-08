@@ -30,6 +30,8 @@ sf::RectangleShape currentColor(sf::Vector2f(70, 70));
 sf::RectangleShape chooseColor(sf::Vector2f(58, 100));
 sf::RectangleShape chooseBlack(sf::Vector2f(58, 100));
 
+sf::Text textOptions[6];
+
 int numChars;
 
 void menuOverview();
@@ -50,6 +52,7 @@ int baudRate;
 bool darkMode;
 int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200 };
 
+char charData0[4];
 char charData1[10];
 char charData2[3];
 
@@ -212,9 +215,7 @@ int main()
 
 	textLightning[12].setColor(sf::Color(0, 170, 255));
 
-	sf::Text textOptions[5];
-
-	for (int i = 0; i < 5; i++){
+	for (int i = 0; i < 6; i++){
 		textOptions[i].setFont(font);
 		textOptions[i].setColor(sf::Color::Black);
 		textOptions[i].setCharacterSize(20);
@@ -225,10 +226,12 @@ int main()
 	textOptions[2].setPosition(210, 180);
 	textOptions[3].setPosition(210, 230);
 	textOptions[4].setPosition(210, 280);
+	textOptions[5].setPosition(475, 470);
 
 	textOptions[0].setString("This is where you can change your options for the program. \nBefore playing around with the different settings, it's important to \nread the instructions to set it up correctly.");
 	textOptions[3].setString("Dark mode: ");
 	textOptions[4].setString("");
+	textOptions[5].setString("Test connection on current settings");
 
 	lineBox[0].position = sf::Vector2f(313, 236);
 	lineBox[1].position = sf::Vector2f(328, 236);
@@ -388,7 +391,7 @@ int main()
 
 	getValue();
 
-	cout << "COM: " + to_string(portCOM) + " Baud: " + to_string(baudRate) + " Dark: " + to_string(darkMode) << endl;
+	cout << "COM: " + to_string(portCOM) + " Baud: " + to_string(rates[baudRate]) + " Dark: " + to_string(darkMode) << endl;
 
 	while (window.isOpen())
 	{
@@ -516,6 +519,11 @@ int main()
 				else if (mousePos.x >= 741 && mousePos.x <= 788 && mousePos.y >= 470 && mousePos.y <= 485 && currentMenu == 1){
 
 					applyLight(lightningMenu);
+
+				}
+				else if (mousePos.x >= 475 && mousePos.x <= 787 && mousePos.y >= 470 && mousePos.y <= 485 && currentMenu == 3){
+
+					sendData(0);
 
 				}
 				else if (mousePos.x >= 210 && mousePos.x <= 268 && mousePos.y >= 133 && mousePos.y <= 233 && currentMenu == 1 && lightningMenu == 0){
@@ -773,7 +781,7 @@ int main()
 			window.draw(arrowRightSprite);
 			window.draw(arrowLeftSprite2);
 			window.draw(arrowRightSprite2);
-			for (int i = 0; i < 5; i++){
+			for (int i = 0; i < 6; i++){
 				window.draw(textOptions[i]);
 			}
 			if (darkMode){
@@ -834,7 +842,7 @@ void menuOptions(){
 	for (int i = 0; i < 20; i++){
 		menuFade[i].color = sf::Color::White;
 	}
-
+	textOptions[5].setColor(sf::Color::Black);
 	menuFade[13].color = sf::Color(0, 170, 255);
 	menuFade[14].color = sf::Color(0, 170, 255);
 
@@ -901,6 +909,8 @@ T StringToNumber(const string &Text, T defValue = T())
 
 void sendData(int lightMode){
 
+	cout << "Connecting on port " + to_string(portCOM) + " with a Baud rate of " + to_string(rates[baudRate]) << endl;
+
 	if (portCOM == 1){
 		comm.startDevice("COM1", rates[baudRate]);
 	}
@@ -931,20 +941,47 @@ void sendData(int lightMode){
 	else if (portCOM == 10){
 		comm.startDevice("COM10", rates[baudRate]);
 	}
-
-	if (lightMode == 1){
-		for (int i = 0; i < 10; i++){
-			comm.send_data(charData1[i]);
-		}
-		comm.stopDevice();
-		cout << "\nData sent, stopped device" << endl;
+	else
+	{
+		cout << "Your port number is higher than the supported numbers. You have to build the source yourself after adding your specific port or ask me to add it for you." << endl;
 	}
-	else if (lightMode == 2){
-		for (int i = 0; i < 3; i++){
-			comm.send_data(charData2[i]);
+
+	if (lightMode == 0){
+		
+		if (connFail == true){
+			textOptions[5].setColor(sf::Color::Red);
 		}
-		comm.stopDevice();
-		cout << "\nData sent, stopped device" << endl;
+		else{
+			textOptions[5].setColor(sf::Color::Green);
+
+			charData0[0] = 'p';
+			charData0[0] = 'o';
+			charData0[0] = 'o';
+			charData0[0] = 'p';
+			for (int i = 0; i < 4; i++){
+				comm.send_data(charData0[i]);
+			}
+			comm.stopDevice();
+
+			cout << "Test data was sent" << endl;
+		}
+
+	}
+	if (connFail == false){
+		if (lightMode == 1){
+			for (int i = 0; i < 10; i++){
+				comm.send_data(charData1[i]);
+			}
+			comm.stopDevice();
+			cout << "Static light set, device stopped" << endl;
+		}
+		else if (lightMode == 2){
+			for (int i = 0; i < 3; i++){
+				comm.send_data(charData2[i]);
+			}
+			comm.stopDevice();
+			cout << "Rainbow light set, device stopped" << endl;
+		}
 	}
 
 	

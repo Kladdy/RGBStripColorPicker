@@ -1,4 +1,5 @@
 #include "tserial.h"
+extern bool connFail = true;
 
 class serial{
 
@@ -17,10 +18,14 @@ class serial{
 		com = new Tserial();
 		if (com!=0)
 		{
-			if(com->connect(port, speed, spNONE))
-				printf("Failed to connect to Arduino. Please check that it is plugged in to the computer and no other serial processes are interacting with it. \n");
-			else
+			if (com->connect(port, speed, spNONE)){
+				printf("Failed to connect to Arduino.\n");
+				connFail = true;
+			}
+			else{
 				printf("Successfully connected to the Arduino\n");
+				connFail = false;
+			}
 			return TRUE;
 		}
 		else
@@ -41,7 +46,6 @@ class serial{
 	
 		
 		com->sendChar(data);
-		printf("%c",data);
 		
 	}
 };
