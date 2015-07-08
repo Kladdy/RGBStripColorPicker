@@ -23,7 +23,7 @@ class serial{
 				connFail = true;
 			}
 			else{
-				printf("Successfully connected to the Arduino\n");
+				printf("Successfully connected to Arduino\n");
 				connFail = false;
 			}
 			return TRUE;

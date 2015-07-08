@@ -55,6 +55,7 @@ int rates[12] = { 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 
 char charData0[4];
 char charData1[10];
 char charData2[3];
+char charData3[3];
 
 int valRed = 255;
 int valGreen = 0;
@@ -480,6 +481,7 @@ int main()
 					textLightning[1].setColor(sf::Color(0, 170, 255));
 
 					textLightning[11].setString("Sets each LED to cycle between red, yellow, green, cyan, blue \nand magenta at different intervals, creating a rainbow-like feel. \nChoose between going downstream or upstream and set the level \nof speed. ");
+					speed = 1;
 
 					lightningMenu = 1;
 				}
@@ -488,6 +490,9 @@ int main()
 					textLightning[1].setColor(sf::Color::Black);
 					textLightning[3].setColor(sf::Color::Black);
 					textLightning[2].setColor(sf::Color(0, 170, 255));
+
+					textLightning[11].setString("Sets all LEDs to cycle between red, yellow, green, cyan, blue and \nmagenta at the same time. Choose the speed of the cycle.");
+					speed = 1;
 
 					lightningMenu = 2;
 				}
@@ -571,6 +576,18 @@ int main()
 					speed = 1;					
 				}
 				else if (mousePos.x >= 309 && mousePos.x <= 341 && mousePos.y >= 206 && mousePos.y <= 224 && currentMenu == 1 && lightningMenu == 1){
+
+					speed = 2;
+				}
+				else if (mousePos.x >= 219 && mousePos.x <= 231 && mousePos.y >= 121 && mousePos.y <= 139 && currentMenu == 1 && lightningMenu == 2){
+
+					speed = 0;
+				}
+				else if (mousePos.x >= 259 && mousePos.x <= 281 && mousePos.y >= 121 && mousePos.y <= 139 && currentMenu == 1 && lightningMenu == 2){
+
+					speed = 1;
+				}
+				else if (mousePos.x >= 309 && mousePos.x <= 341 && mousePos.y >= 121 && mousePos.y <= 139 && currentMenu == 1 && lightningMenu == 2){
 
 					speed = 2;
 				}
@@ -739,7 +756,48 @@ int main()
 				}
 			}
 			else if (lightningMenu == 2){
-
+				if (speed == 0){
+					arrowRightBlueSprite.setPosition(210, 115);
+					window.draw(arrowRightBlueSprite);
+					arrowRightSprite2.setPosition(250, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(260, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(300, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(310, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(320, 115);
+					window.draw(arrowRightSprite2);
+				}
+				else if (speed == 1){
+					arrowRightBlueSprite.setPosition(250, 115);
+					window.draw(arrowRightBlueSprite);
+					arrowRightBlueSprite.setPosition(260, 115);
+					window.draw(arrowRightBlueSprite);
+					arrowRightSprite2.setPosition(210, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(300, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(310, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(320, 115);
+					window.draw(arrowRightSprite2);
+				}
+				else if (speed == 2){
+					arrowRightBlueSprite.setPosition(300, 115);
+					window.draw(arrowRightBlueSprite);
+					arrowRightBlueSprite.setPosition(310, 115);
+					window.draw(arrowRightBlueSprite);
+					arrowRightBlueSprite.setPosition(320, 115);
+					window.draw(arrowRightBlueSprite);
+					arrowRightSprite2.setPosition(210, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(250, 115);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(260, 115);
+					window.draw(arrowRightSprite2);
+				}
 			}
 			else if(lightningMenu == 3){
 				window.draw(textLightning[4]);
@@ -982,6 +1040,13 @@ void sendData(int lightMode){
 			comm.stopDevice();
 			cout << "Rainbow light set, device stopped" << endl;
 		}
+		else if (lightMode == 3){
+			for (int i = 0; i < 2; i++){
+				comm.send_data(charData3[i]);
+			}
+			comm.stopDevice();
+			cout << "Cycle light set, device stopped" << endl;
+		}
 	}
 
 	
@@ -989,6 +1054,9 @@ void sendData(int lightMode){
 
 void previewLightning(int previewMode){
 	
+	int r = 255, g = 0, b = 0;
+	int colorState = 0;
+
 	sf::RenderWindow preview(sf::VideoMode(512, 512), "Preview");
 
 	sf::Image iconPre;
@@ -1019,12 +1087,12 @@ void previewLightning(int previewMode){
 	sf::RectangleShape previewColor6(sf::Vector2f(50, 50));
 	sf::RectangleShape previewColor7(sf::Vector2f(50, 50));
 
+	logo512preSprite.setTexture(logo512pre);
+
 	int roundNum = 0;
 
 	if (previewMode == 0){
 		cout << "Previewing static lightning" << endl;
-		logo512preSprite.setTexture(logo512pre);
-
 		previewColor1.setPosition(sf::Vector2f(125, 125));
 		previewColor1.setFillColor(sf::Color(valRed, valGreen, valBlue));
 	}
@@ -1051,6 +1119,19 @@ void previewLightning(int previewMode){
 	}
 	else if (previewMode == 2){
 		cout << "Previewing cycle lightning" << endl;
+		
+		previewColor1.setPosition(sf::Vector2f(125, 125));
+		previewColor1.setFillColor(sf::Color(r, g, b));
+		
+		if (speed == 0){
+			preview.setFramerateLimit(10);
+		}
+		if (speed == 1){
+			preview.setFramerateLimit(30);
+		}
+		if (speed == 2){
+			preview.setFramerateLimit(60);
+		}
 	}
 	else if (previewMode == 4){
 		cout << "Previewing RGB fade lightning" << endl;
@@ -1161,6 +1242,44 @@ void previewLightning(int previewMode){
 			}
 		}
 		
+		if (previewMode == 2){
+
+			if (colorState == 0){
+				if (r != 255){
+					r++;
+				}
+				else if (r == 255 && b != 0){
+					b--;
+				}
+				else if (r == 255 && b == 0){
+					colorState = 1;
+				
+				}
+			}
+			else if (colorState == 1){
+				if (g != 255){
+					g++;
+				}
+				else if (g == 255 && r != 0){
+					r--;
+				}
+				else if (g == 255 && r == 0){
+					colorState = 2;
+				}
+			}
+			else if (colorState == 2){
+				if (b != 255){
+					b++;
+				}
+				else if (b == 255 && g != 0){
+					g--;
+				}
+				else if (b == 255 && g == 0){
+					colorState = 0;
+				}
+			}
+			previewColor1.setFillColor(sf::Color(r, g, b));
+		}
 
 
 		preview.clear(sf::Color::White);
@@ -1169,7 +1288,7 @@ void previewLightning(int previewMode){
 			preview.draw(previewColor1);
 			preview.draw(logo512preSprite);
 		}
-		if (previewMode == 1){
+		else if (previewMode == 1){
 
 			preview.draw(previewColor2);
 			preview.draw(previewColor3);
@@ -1191,6 +1310,13 @@ void previewLightning(int previewMode){
 			logo64preSprite.setPosition(385, 224);
 			preview.draw(logo64preSprite);
 		}
+		else if (previewMode == 2){
+
+			preview.draw(previewColor1);
+			preview.draw(logo512preSprite);
+
+		}
+
 
 		preview.display();
 	}
@@ -1263,15 +1389,25 @@ void applyLight(int lightMode){
 		cout << "Applying rainbow lightning" << endl;
 
 		string dir = to_string(streamMode);
-		string spd = to_string(speed);
+		string spd1 = to_string(speed);
 
 		charData2[0] = 'w';
 		charData2[1] = dir[0];
-		charData2[2] = spd[0];
+		charData2[2] = spd1[0];
 
 		sendData(2);
 
 	}
-	
+	else if (lightMode == 2){
 
+		cout << "Applying cycle lightning" << endl;
+
+		string spd2 = to_string(speed);
+
+		charData3[0] = 'e';
+		charData3[1] = spd2[0];
+
+		sendData(3);
+	}
+	
 }

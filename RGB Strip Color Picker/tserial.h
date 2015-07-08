@@ -1,36 +1,3 @@
-
-
-
-/* ------------------------------------------------------------------------ --
---                                                                          --
---                        PC serial port connection object                  --
---                           for non-event-driven programs                  --
---                                                                          --
---                                                                          --
---                                                                          --
---  Copyright @ 2001          Thierry Schneider                             --
---                            thierry@tetraedre.com                         --
---                                                                          --
---                                                                          --
---                                                                          --
--- ------------------------------------------------------------------------ --
---                                                                          --
---  Filename : sertest2.cpp                                                 --
---  Author   : Thierry Schneider                                            --
---  Created  : April 4th 2000                                               --
---  Modified : April 8th 2001                                               --
---  Plateform: Windows 95, 98, NT, 2000 (Win32)                             --
--- ------------------------------------------------------------------------ --
---                                                                          --
---  This software is given without any warranty. It can be distributed      --
---  free of charge as long as this header remains, unchanged.               --
---                                                                          --
--- ------------------------------------------------------------------------ */
-
-
-
-
-/* ---------------------------------------------------------------------- */
 #ifndef TSERIAL_H
 #define TSERIAL_H
 
