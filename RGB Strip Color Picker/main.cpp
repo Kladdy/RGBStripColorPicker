@@ -1,7 +1,3 @@
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "stdafx.h"
 #include <iostream>
 #include <fstream>
@@ -12,6 +8,8 @@
 #include <conio.h>
 #include "tserial.h"
 #include "bot_control.h"
+#include <stdlib.h>    
+#include <time.h>  
 
 
 using namespace std;
@@ -56,15 +54,17 @@ char charData0[4];
 char charData1[10];
 char charData2[3];
 char charData3[3];
+char charData4[3];
 
 int valRed = 255;
 int valGreen = 0;
 int valBlue = 0;
+int fadeMode = 0;
 
 int oldVal[3] = { 255, 0 ,0 };
 
 int currentMenu = 0; //0: Overview, 1: Lightning, 2: Instructions, 3: Options: 4: Credits
-int lightningMenu = 0; //0: Static, 2: Rainbow, 3: Cycle, 4: Fade RGB, 5: Fade Random
+int lightningMenu = 0; //0: Static, 1: Rainbow, 2: Cycle, 3: Fade 
 int colorMode = 0;
 int speed = 1;
 int streamMode = 0;
@@ -188,8 +188,8 @@ int main()
 	textLightning[1].setPosition(412, 10);
 	textLightning[2].setPosition(552, 10);
 	textLightning[3].setPosition(680, 10);
-	textLightning[4].setPosition(650, 35);
-	textLightning[5].setPosition(710, 35);
+	textLightning[4].setPosition(210, 140);
+	textLightning[5].setPosition(270, 140);
 	textLightning[6].setPosition(650, 470);
 	textLightning[7].setPosition(741, 470);
 	textLightning[8].setPosition(388, 213);
@@ -213,7 +213,8 @@ int main()
 	textLightning[11].setString("Sets a static color to the RGB strip. This color will remain unless \nchanged. Choose between white, black or a custom color from \nthe hue bar.");
 	textLightning[12].setString("Downstream");
 	textLightning[13].setString("Upstream");
-
+	
+	textLightning[4].setColor(sf::Color(0, 170, 255));
 	textLightning[12].setColor(sf::Color(0, 170, 255));
 
 	for (int i = 0; i < 6; i++){
@@ -496,26 +497,21 @@ int main()
 
 					lightningMenu = 2;
 				}
-				else if ((mousePos.x >= 680 && mousePos.x <= 720 && mousePos.y >= 10 && mousePos.y <= 25 && currentMenu == 1) || (mousePos.x >= 650 && mousePos.x <= 687 && mousePos.y >= 35 && mousePos.y <= 50 && currentMenu == 1 && (lightningMenu == 3 || lightningMenu == 5))){
+				else if (mousePos.x >= 680 && mousePos.x <= 720 && mousePos.y >= 10 && mousePos.y <= 25 && currentMenu == 1){
 					textLightning[0].setColor(sf::Color::Black);
 					textLightning[1].setColor(sf::Color::Black);
 					textLightning[2].setColor(sf::Color::Black);
 					textLightning[5].setColor(sf::Color::Black);
 					textLightning[3].setColor(sf::Color(0, 170, 255));
+
 					textLightning[4].setColor(sf::Color(0, 170, 255));
+					textLightning[5].setColor(sf::Color::Black);
+					textLightning[11].setString("Sets all LEDs to fade in to a color and then fade out again. Choose \nbetween fading red, yellow, green, cyan, blue and magenta or \nhaving it choose a random color and set the level of speed.");
+					speed = 1;
 
-					lightningMenu = 4;
+					lightningMenu = 3;
 				}
-				else if (mousePos.x >= 710 && mousePos.x <= 783 && mousePos.y >= 35 && mousePos.y <= 50 && currentMenu == 1 && (lightningMenu == 3 || lightningMenu == 4)){
-					textLightning[0].setColor(sf::Color::Black);
-					textLightning[1].setColor(sf::Color::Black);
-					textLightning[2].setColor(sf::Color::Black);
-					textLightning[4].setColor(sf::Color::Black);
-					textLightning[5].setColor(sf::Color(0, 170, 255));
-
-
-					lightningMenu = 5;
-				}
+				
 				else if (mousePos.x >= 650 && mousePos.x <= 716 && mousePos.y >= 470 && mousePos.y <= 485 && currentMenu == 1){
 					
 					previewLightning(lightningMenu);
@@ -591,6 +587,18 @@ int main()
 
 					speed = 2;
 				}
+				else if (mousePos.x >= 219 && mousePos.x <= 231 && mousePos.y >= 191 && mousePos.y <= 209 && currentMenu == 1 && lightningMenu == 3){
+
+					speed = 0;
+				}
+				else if (mousePos.x >= 259 && mousePos.x <= 281 && mousePos.y >= 191 && mousePos.y <= 209 && currentMenu == 1 && lightningMenu == 3){
+
+					speed = 1;
+				}
+				else if (mousePos.x >= 309 && mousePos.x <= 341 && mousePos.y >= 191 && mousePos.y <= 209 && currentMenu == 1 && lightningMenu == 3){
+
+					speed = 2;
+				}
 				else if (mousePos.x >= 210 && mousePos.x <= 320 && mousePos.y >= 160 && mousePos.y <= 175 && currentMenu == 1 && lightningMenu == 1){
 					
 					textLightning[12].setColor(sf::Color(0, 170, 255));
@@ -602,6 +610,18 @@ int main()
 					textLightning[12].setColor(sf::Color::Black);
 					textLightning[13].setColor(sf::Color(0, 170, 255));
 					streamMode = 1;
+				}
+				else if (mousePos.x >= 210 && mousePos.x <= 247 && mousePos.y >= 140 && mousePos.y <= 155 && currentMenu == 1 && lightningMenu == 3){
+
+					textLightning[4].setColor(sf::Color(0, 170, 255));
+					textLightning[5].setColor(sf::Color::Black);
+					fadeMode = 0;
+				}
+				else if (mousePos.x >= 270 && mousePos.x <= 343 && mousePos.y >= 140 && mousePos.y <= 155 && currentMenu == 1 && lightningMenu == 3){
+
+					textLightning[4].setColor(sf::Color::Black);
+					textLightning[5].setColor(sf::Color(0, 170, 255));
+					fadeMode = 1;
 				}
 			}
 		}
@@ -799,17 +819,52 @@ int main()
 					window.draw(arrowRightSprite2);
 				}
 			}
-			else if(lightningMenu == 3){
-				window.draw(textLightning[4]);
-				window.draw(textLightning[5]);
-			}
-			else if (lightningMenu == 4){
-				window.draw(textLightning[4]);
-				window.draw(textLightning[5]);
-			}
-			else if (lightningMenu == 5){
-				window.draw(textLightning[4]);
-				window.draw(textLightning[5]);
+			else if(lightningMenu == 3){				
+				for (int i = 4; i < 6; i++){
+					window.draw(textLightning[i]);
+				}
+				if (speed == 0){
+					arrowRightBlueSprite.setPosition(210, 185);
+					window.draw(arrowRightBlueSprite);
+					arrowRightSprite2.setPosition(250, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(260, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(300, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(310, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(320, 185);
+					window.draw(arrowRightSprite2);
+				}
+				else if (speed == 1){
+					arrowRightBlueSprite.setPosition(250, 185);
+					window.draw(arrowRightBlueSprite);
+					arrowRightBlueSprite.setPosition(260, 185);
+					window.draw(arrowRightBlueSprite);
+					arrowRightSprite2.setPosition(210, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(300, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(310, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(320, 185);
+					window.draw(arrowRightSprite2);
+				}
+				else if (speed == 2){
+					arrowRightBlueSprite.setPosition(300, 185);
+					window.draw(arrowRightBlueSprite);
+					arrowRightBlueSprite.setPosition(310, 185);
+					window.draw(arrowRightBlueSprite);
+					arrowRightBlueSprite.setPosition(320, 185);
+					window.draw(arrowRightBlueSprite);
+					arrowRightSprite2.setPosition(210, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(250, 185);
+					window.draw(arrowRightSprite2);
+					arrowRightSprite2.setPosition(260, 185);
+					window.draw(arrowRightSprite2);
+				}
 			}
 			
 			for (int i = 0; i < 4; i++){
@@ -1021,7 +1076,7 @@ void sendData(int lightMode){
 			}
 			comm.stopDevice();
 
-			cout << "Test data was sent" << endl;
+			cout << "Test data was sent, device disconnected." << endl;
 		}
 
 	}
@@ -1031,21 +1086,28 @@ void sendData(int lightMode){
 				comm.send_data(charData1[i]);
 			}
 			comm.stopDevice();
-			cout << "Static light set, device stopped" << endl;
+			cout << "Static light set, device disconnected" << endl;
 		}
 		else if (lightMode == 2){
 			for (int i = 0; i < 3; i++){
 				comm.send_data(charData2[i]);
 			}
 			comm.stopDevice();
-			cout << "Rainbow light set, device stopped" << endl;
+			cout << "Rainbow light set, device disconnected" << endl;
 		}
 		else if (lightMode == 3){
 			for (int i = 0; i < 2; i++){
 				comm.send_data(charData3[i]);
 			}
 			comm.stopDevice();
-			cout << "Cycle light set, device stopped" << endl;
+			cout << "Cycle light set, device disconnected" << endl;
+		}
+		else if (lightMode == 4){
+			for (int i = 0; i < 3; i++){
+				comm.send_data(charData4[i]);
+			}
+			comm.stopDevice();
+			cout << "Fade light set, device disconnected" << endl;
 		}
 	}
 
@@ -1055,7 +1117,17 @@ void sendData(int lightMode){
 void previewLightning(int previewMode){
 	
 	int r = 255, g = 0, b = 0;
+	int r1 = 0, g1 = 0, b1 = 0;
 	int colorState = 0;
+	int roundNum = 0;
+	int roundNum1 = 1;
+	int nextRound = 1;
+	int randNum;
+
+	if (fadeMode == 1){
+		srand(time(NULL));
+		roundNum1 = rand() % 7 + 1;
+	}
 
 	sf::RenderWindow preview(sf::VideoMode(512, 512), "Preview");
 
@@ -1075,6 +1147,7 @@ void previewLightning(int previewMode){
 		cout << "Error loading 'logo64pre.png' for the preview window.";
 	}
 
+
 	sf::Sprite logo512preSprite;
 	sf::Sprite logo64preSprite;
 	
@@ -1088,8 +1161,6 @@ void previewLightning(int previewMode){
 	sf::RectangleShape previewColor7(sf::Vector2f(50, 50));
 
 	logo512preSprite.setTexture(logo512pre);
-
-	int roundNum = 0;
 
 	if (previewMode == 0){
 		cout << "Previewing static lightning" << endl;
@@ -1133,11 +1204,21 @@ void previewLightning(int previewMode){
 			preview.setFramerateLimit(60);
 		}
 	}
-	else if (previewMode == 4){
-		cout << "Previewing RGB fade lightning" << endl;
-	}
-	else if (previewMode == 5){
-		cout << "Previewing random fade lightning" << endl;
+	else if (previewMode == 3){
+		cout << "Previewing fade lightning" << endl;
+
+		previewColor1.setPosition(sf::Vector2f(125, 125));
+		previewColor1.setFillColor(sf::Color(r1, g1, b1));
+		
+		if (speed == 0){
+			preview.setFramerateLimit(30);
+		}
+		if (speed == 1){
+			preview.setFramerateLimit(60);
+		}
+		if (speed == 2){
+			preview.setFramerateLimit(120);
+		}
 	}
 
 	while (preview.isOpen())
@@ -1280,6 +1361,110 @@ void previewLightning(int previewMode){
 			}
 			previewColor1.setFillColor(sf::Color(r, g, b));
 		}
+		else if (previewMode == 3){
+			if (roundNum1 == 0){
+				if (r1 == 0 && g1 == 0 && b1 == 0){
+					if (fadeMode == 1){
+						srand(time(NULL));
+						roundNum1 = rand() % 6 + 1;
+
+						cout << roundNum1 << endl;
+					}
+					else{
+						if (nextRound == 1){
+							roundNum1 = 2;
+						}
+						else if (nextRound == 2){
+							roundNum1 = 3;
+						}
+						else if (nextRound == 3){
+							roundNum1 = 4;
+						}
+						else if (nextRound == 4){
+							roundNum1 = 5;
+						}
+						else if (nextRound == 5){
+							roundNum1 = 6;
+						}
+						else if (nextRound == 6){
+							roundNum1 = 1;
+						}
+					}
+					
+				}
+				else{
+					if (r1 != 0){
+						r1--;
+					}
+					if (g1 != 0){
+						g1--;
+					}
+					if (b1 != 0){
+						b1--;
+					}
+				}
+
+			}
+			else if (roundNum1 == 1){
+				if (r1 == 255){
+					roundNum1 = 0;
+					nextRound = 1;
+				}
+				else{
+					r1++;
+				}
+			}
+			else if (roundNum1 == 2){
+				if (r1 == 255 && g1 == 255){
+					roundNum1 = 0;
+					nextRound = 2;
+				}
+				else{
+					r1++;
+					g1++;
+				}
+			}
+			else if (roundNum1 == 3){
+				if (g1 == 255){
+					roundNum1 = 0;
+					nextRound = 3;
+				}
+				else{
+					g1++;
+				}
+			}
+			else if (roundNum1 == 4){
+				if (g1 == 255 && b1 == 255){
+					roundNum1 = 0;
+					nextRound = 4;
+				}
+				else{
+					g1++;
+					b1++;
+				}
+			}
+			else if (roundNum1 == 5){
+				if (b1 == 255){
+					roundNum1 = 0;
+					nextRound = 5;
+				}
+				else{
+					b1++;
+				}
+			}
+			else if (roundNum1 == 6){
+				if (b1 == 255 && r1 == 255){
+					roundNum1 = 0;
+					nextRound = 6;
+				}
+				else{
+					b1++;
+					r1++;
+				}
+			}
+			previewColor1.setFillColor(sf::Color(r1, g1, b1));
+
+		}
 
 
 		preview.clear(sf::Color::White);
@@ -1316,7 +1501,12 @@ void previewLightning(int previewMode){
 			preview.draw(logo512preSprite);
 
 		}
+		else if (previewMode == 3){
 
+			preview.draw(previewColor1);
+			preview.draw(logo512preSprite);
+
+		}
 
 		preview.display();
 	}
@@ -1408,6 +1598,20 @@ void applyLight(int lightMode){
 		charData3[1] = spd2[0];
 
 		sendData(3);
+	}
+	else if (lightMode == 3){
+
+		cout << "Applying fade lightning" << endl;
+
+		string mode = to_string(fadeMode);
+		string spd3 = to_string(speed);
+
+		charData4[0] = 'w';
+		charData4[1] = mode[0];
+		charData4[2] = spd3[0];
+
+		sendData(4);
+
 	}
 	
 }
