@@ -1423,13 +1423,13 @@ void previewLightning(int previewMode){
 		previewColor1.setFillColor(sf::Color(r1, g1, b1));
 		
 		if (speed == 0){
-			preview.setFramerateLimit(30);
+			preview.setFramerateLimit(50);
 		}
 		if (speed == 1){
-			preview.setFramerateLimit(60);
+			preview.setFramerateLimit(100);
 		}
 		if (speed == 2){
-			preview.setFramerateLimit(120);
+			preview.setFramerateLimit(185);
 		}
 	}
 
@@ -1818,7 +1818,7 @@ void applyLight(int lightMode){
 		string mode = to_string(fadeMode);
 		string spd3 = to_string(speed);
 
-		charData4[0] = 'w';
+		charData4[0] = 'r';
 		charData4[1] = mode[0];
 		charData4[2] = spd3[0];
 
