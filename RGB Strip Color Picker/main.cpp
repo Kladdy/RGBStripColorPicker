@@ -1394,10 +1394,10 @@ void previewLightning(int previewMode){
 			preview.setFramerateLimit(1);
 		}
 		if (speed == 1){
-			preview.setFramerateLimit(3);
+			preview.setFramerateLimit(2);
 		}
 		if (speed == 2){
-			preview.setFramerateLimit(5);
+			preview.setFramerateLimit(4);
 		}
 	}
 	else if (previewMode == 2){

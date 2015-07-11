@@ -14,13 +14,19 @@ char dataChar [9];
 int valRed = 0;
 int valBlue = 0;
 int valGreen = 0;
-int lightMode = 0; 
+int lightMode = 0;
 //0 = Test, 1: Static, 2: Rainbow, 3: Cycle, 4: Fade
+int colorState = 0; 
+//0=goRed 1=goGreen 2=goBlue
 
-int time = 10;
+int time = 10;    
 int roundNum1 = 1;
 int nextRound = 1;
 int fadeMode;
+
+byte dir;
+
+CRGB rgb;
 
 void setup() {
   
@@ -29,9 +35,13 @@ void setup() {
   pinMode(13, OUTPUT);
   randomSeed(analogRead(A0));
   
+  rgb.r = 0;
+  rgb.g = 0;
+  rgb.b = 0;
+  
+  sendData();
+  
 }
-
-CRGB rgb;
 
 void loop() {
   
@@ -42,6 +52,7 @@ void loop() {
       for(int i=0; i<3; i++){
           dataChar[i] = Serial.read();
       }
+      flushReceive();
       lightMode = 0;  
       for(int i = 0; i < 20; i++){
         digitalWrite(13, HIGH);
@@ -49,37 +60,53 @@ void loop() {
         digitalWrite(13, LOW);
         delay(50);
       }
-      flushReceive();
     }
     else if(firstChar == 'q'){
       for(int i=0; i<9; i++){
           dataChar[i] = Serial.read();
       }
-      lightMode = 1;  
-      
       flushReceive();
+      lightMode = 1;  
       staticLight();
     }
     else if(firstChar == 'w'){
       for(int i=0; i<2; i++){
           dataChar[i] = Serial.read();
       }
-      lightMode = 2;  
-      
       flushReceive();
+      lightMode = 2;  
+      if(dataChar[0] == '0'){
+        dir = 1;
+      }else if(dataChar[0] == '1'){
+        dir = 0;
+      }
+      if(dataChar[1] == '0'){
+        time = 30;
+      }else if(dataChar[1] == '1'){
+        time = 10;
+      }else if(dataChar[1] == '2'){
+        time = 5;
+      }
     }
     else if(firstChar == 'e'){
       for(int i=0; i<1; i++){
           dataChar[i] = Serial.read();
       }
-      lightMode = 3; 
-      
       flushReceive();
+      lightMode = 3; 
+      if(dataChar[0] == '0'){
+        time = 40;
+      }else if(dataChar[0] == '1'){
+        time = 10;
+      }else if(dataChar[0] == '2'){
+        time = 5;
+      }
     }
     else if(firstChar == 'r'){
       for(int i=0; i<2; i++){
           dataChar[i] = Serial.read();
       }
+      flushReceive();
       lightMode = 4; 
       if(dataChar[1] == '0'){
       time = 20;
@@ -93,10 +120,6 @@ void loop() {
       }else if(dataChar[0] == '1'){
       fadeMode = 1;
       }
-      flushReceive();
-      valRed = 0;
-      valGreen = 0;
-      valBlue = 0;
     }
   }
   if(lightMode == 2){
@@ -104,7 +127,6 @@ void loop() {
   }else if(lightMode == 3){
     cycleLight();
   }else if(lightMode == 4){
-    delay(time);
     fadeLight();
   }
 }
@@ -112,6 +134,17 @@ void loop() {
 void flushReceive(){
   while(Serial.available())
     Serial.read(); 
+    
+  rgb.r = 0;
+  rgb.g = 0;
+  rgb.b = 0;
+  valRed = 0;
+  valGreen = 0;
+  valBlue = 0;
+  
+  roundNum1 = 1;
+  nextRound = 1;
+  colorState = 0;
 }
 void staticLight(){
   valRed = 0;
@@ -137,21 +170,48 @@ void staticLight(){
   sendData();
 }
 void rainbowLight(){
+  int cycles, j, k;
+  
+  for(cycles=0;cycles<1;cycles++){
+    k=255;
+    
+    for (j=0; j < 256; j++,k--) {
+      
+      if(k<0)k=255;
+      
+      for(int i=0; i<NUM_LEDS; i+=1) {
+        Wheel(((i * 256 / NUM_LEDS) + (dir==0?j:k)) % 256,4);        
+        leds[i]=rgb;
+      }
+      LED.showRGB((byte*)leds, NUM_LEDS);;
+      delay(time);
+    }
+  }
   
   
-  sendData();
 }
 void cycleLight(){
-  
+  if(colorState==0){
+        goRed();
+      }else if(colorState==1){
+        goGreen();
+      }else if(colorState==2){
+        goBlue();
+      }
+      for(int i=0; i<NUM_LEDS; i++) {
+        leds[i]=rgb;
+      }
+      LED.showRGB((byte*)leds, NUM_LEDS);;
+      delay(time);
   
   sendData();
 }
 void fadeLight(){
+  delay(time);
   if (roundNum1 == 0){
     if (valRed == 0 && valGreen == 0 && valBlue == 0){
       if (fadeMode == 1){
       roundNum1 = random(1,7);
-      Serial.print(roundNum1);
       }else if (fadeMode == 0){
       if (nextRound == 1){
 	roundNum1 = 2;
@@ -250,7 +310,70 @@ void fadeLight(){
 }
 void sendData(){
   for(int i=0; i<NUM_LEDS; i+=1) {    
-    leds[i]=rgb;
+    leds[i]=rgb;   
   }
   LED.showRGB((byte*)leds, NUM_LEDS);
+}
+
+void Wheel(byte WheelPos,byte dim){
+  
+  if (WheelPos < 85) {
+   rgb.r=0;
+   rgb.g=WheelPos * 3/dim;
+   rgb.b=(255 - WheelPos * 3)/dim;;
+   return;
+  } 
+  else if (WheelPos < 170) {
+   WheelPos -= 85;
+   rgb.r=WheelPos * 3/dim;
+   rgb.g=(255 - WheelPos * 3)/dim;
+   rgb.b=0;
+   return;
+  }
+  else {
+   WheelPos -= 170; 
+   rgb.r=(255 - WheelPos * 3)/dim;
+   rgb.g=0;
+   rgb.b=WheelPos * 3/dim;
+   return;
+  }
+}
+
+void goRed(){
+  if(rgb.r != 255){
+  rgb.r++;
+  return;
+  }else if(rgb.r == 255 && rgb.b != 0){
+  rgb.b--;
+  return;
+  }else if(rgb.r == 255 && rgb.b == 0){
+  colorState = 1;
+  return;
+  }
+}
+
+void goGreen(){
+  if(rgb.g != 255){
+  rgb.g++;
+  return;
+  }else if(rgb.g == 255 && rgb.r != 0){
+  rgb.r--;
+  return;
+  }else if(rgb.g == 255 && rgb.r == 0){
+  colorState = 2;
+  return;
+  }
+}
+
+void goBlue(){
+  if(rgb.b != 255){
+  rgb.b++;
+  return;
+  }else if(rgb.b == 255 && rgb.g != 0){
+  rgb.g--;
+  return;
+  }else if(rgb.b == 255 && rgb.g == 0){
+  colorState = 0;
+  return;
+  }
 }
