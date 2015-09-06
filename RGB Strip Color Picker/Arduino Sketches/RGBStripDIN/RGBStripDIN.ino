@@ -1,7 +1,7 @@
 #include "FastSPI_LED2.h"
 
-#define NUM_LEDS 6 
-//Enter the number of LED's on the strip here.
+#define NUM_LEDS 180 
+//Enter the number of LED's on the strip.
 
 struct CRGB { byte g; byte r; byte b; };
 struct CRGB leds[NUM_LEDS];
@@ -53,7 +53,11 @@ void loop() {
           dataChar[i] = Serial.read();
       }
       flushReceive();
-      lightMode = 0;  
+      lightMode = 0; 
+      valRed = 0;
+      valGreen = 0;
+      valBlue = 0; 
+      sendData();  
       for(int i = 0; i < 20; i++){
         digitalWrite(13, HIGH);
         delay(50);
