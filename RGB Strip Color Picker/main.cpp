@@ -51,7 +51,7 @@ sf::RectangleShape chooseColor(sf::Vector2f(58, 100));
 sf::RectangleShape chooseWhite(sf::Vector2f(58, 100));
 sf::RectangleShape chooseBlack(sf::Vector2f(58, 100));
 
-sf::Text globalText[27];
+sf::Text globalText[28];
 
 int numChars;
 
@@ -208,6 +208,14 @@ int main(){
 	TLogoSprite.setTexture(TLogo);
 	TLogoSprite.setPosition(294, 415);
 
+	sf::Texture InstructablesLogo;
+	if (!InstructablesLogo.loadFromFile("Assets/InstructablesLogo.png")){
+		cout << "Error loading 'InstructablesLogo.png'." << endl;
+	}
+	sf::Sprite InstructablesLogoSprite;
+	InstructablesLogoSprite.setTexture(InstructablesLogo);
+	InstructablesLogoSprite.setPosition(210, 200);
+
 	sf::Font font;
 	if (!font.loadFromFile("Assets/Roboto-Light.ttf")){
 		cout << "Error loading font 'Roboto-Light'." << endl;
@@ -245,6 +253,8 @@ int main(){
 
 	globalText[26].setPosition(210, 10);
 
+	globalText[27].setPosition(210, 10);
+
 	globalText[0].setString("Overview");
 	globalText[1].setString("Lightning");
 	globalText[2].setString("Instructions");
@@ -275,6 +285,8 @@ int main(){
 	globalText[24].setString("");
 	globalText[25].setString("Test connection on current settings");
 	globalText[26].setString(L"This software was created by Sigge \"Kladdy\" Stjärnholm with the \nhelp of the Arduino and Stack Overflow communities. SFML was \nused to display graphics as well as handling the window. \nA re-written version of Thierry Schneider's serial library was used \nfor the Arduino communication. \n\nIf you want to contribute to this project, e-mail me at \nsigge.stjarnholm@gmail.com with feature requests or general \nquestions. Issues can be reported the same way or via GitHub. \nThere you can also contribute with your own source code and \nmake any changes for your own version of the program. Click the \nGitHub button below to go to the repository. My Twitter can also \nbe used for communication.");
+
+	globalText[27].setString("If you're not sure on how to use this tool, refer to the guide on \nInstructables. Click the robot below to get to the tutorial. If that \ncouldn't solve your issue, go to the 'Credits' tab to get contact \ninformation.");
 
 	globalText[6].setColor(sf::Color(0, 170, 255));
 	globalText[10].setColor(sf::Color(0, 170, 255));
@@ -436,7 +448,7 @@ int main(){
 				globalText[i].setFont(font);
 				globalText[i].setColor(sf::Color::White);
 			}
-			for (int i = 5; i < 27; i++){
+			for (int i = 5; i < 28; i++){
 				globalText[i].setFont(font);
 				globalText[i].setColor(sf::Color::White);
 				globalText[i].setCharacterSize(20);
@@ -460,7 +472,7 @@ int main(){
 				globalText[i].setFont(font);
 				globalText[i].setColor(sf::Color::Black);
 			}
-			for (int i = 5; i < 27; i++){
+			for (int i = 5; i < 28; i++){
 				globalText[i].setFont(font);
 				globalText[i].setColor(sf::Color::Black);
 				globalText[i].setCharacterSize(20);
@@ -548,6 +560,9 @@ int main(){
 				}
 				else if (mousePos.x >= 294 && mousePos.x <= 368 && mousePos.y >= 415 && mousePos.y <= 491 && currentMenu == 4){ //Link on image, Twitter
 					system("start https://twitter.com/iKladdy");
+				}
+				else if (mousePos.x >= 210 && mousePos.x <= 430 && mousePos.y >= 200 && mousePos.y <= 488 && currentMenu == 2){ //Link on image, Instructables
+					system("start http://www.instructables.com/id/How-to-use-RGB-Strip-Color-Picker/");
 				}
 				else if (mousePos.x >= 301 && mousePos.x <= 349 && mousePos.y >= 10 && mousePos.y <= 30 && currentMenu == 1){ //Text, Static
 					lightningMenu = 0;
@@ -1023,6 +1038,8 @@ int main(){
 		else if (currentMenu == 2){
 			//Instructions
 			menuInstructions();
+			window.draw(globalText[27]);
+			window.draw(InstructablesLogoSprite);
 		}
 		else if (currentMenu == 3){
 			//Options
